@@ -1,3 +1,5 @@
+!pip install mido
+
 import mido
 from mido import Message, MidiFile, MidiTrack
 
