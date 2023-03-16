@@ -1,22 +1,37 @@
 import mido
 from mido import Message, MidiFile, MidiTrack
 
-chords = {
-    'C': ['C', 'E', 'G'],
-    'D': ['D', 'F#', 'A'],
-    'E': ['E', 'G#', 'B'],
-    'F': ['F', 'A', 'C'],
-    'G': ['G', 'B', 'D'],
-    'A': ['A', 'C#', 'E'],
-    'B': ['B', 'D#', 'F#'],
-    'Cm': ['C', 'Eb', 'G'],
-    'Dm': ['D', 'F', 'A'],
-    'Em': ['E', 'G', 'B'],
-    'Fm': ['F', 'Ab', 'C'],
-    'Gm': ['G', 'Bb', 'D'],
-    'Am': ['A', 'C', 'E'],
-    'Bm': ['B', 'D', 'F#'],
+root_notes = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B']
+chord_types = {
+    '': [0, 4, 7],
+    'm': [0, 3, 7],
+    'dim': [0, 3, 6],
+    'aug': [0, 4, 8],
+    '7': [0, 4, 7, 10],
+    'Maj7': [0, 4, 7, 11],
+    'm7': [0, 3, 7, 10],
+    'dim7': [0, 3, 6, 9],
+    'mMaj7': [0, 3, 7, 11],
+    'aug7': [0, 4, 8, 10],
 }
+
+def note_name(pitch_class):
+    return root_notes[pitch_class % 12]
+
+def transpose(note, interval):
+    index = root_notes.index(note)
+    return note_name(index + interval)
+
+def create_chord_map():
+    chord_map = {}
+    for root in root_notes:
+        for chord_type, intervals in chord_types.items():
+            chord_name = root + chord_type
+            chord_notes = [transpose(root, interval) for interval in intervals]
+            chord_map[chord_name] = chord_notes
+    return chord_map
+
+chords = create_chord_map()
 
 def note_to_midi_pitch(note):
     pitch_map = {'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11}
@@ -41,7 +56,7 @@ def get_notes(chord_progression):
             print(f"Chord {chord} not recognized.")
     return notes
 
-def create_midi_file(chords, output_filename='output.mid', duration=480):
+def create_midi_file(chords, output_filename='output.mid', duration=1920):
     midi_file = MidiFile()
     track = MidiTrack()
     midi_file.tracks.append(track)
@@ -50,7 +65,9 @@ def create_midi_file(chords, output_filename='output.mid', duration=480):
         for note in chord_notes:
             midi_note = note_to_midi_pitch(note + '3')
             track.append(Message('note_on', note=midi_note, velocity=64, time=0))
-        track.append(Message('note_off', note=midi_note, velocity=64, time=duration))
+        for note in chord_notes:
+            midi_note = note_to_midi_pitch(note + '3')
+            track.append(Message('note_off', note=midi_note, velocity=64, time=duration))
 
     midi_file.save(output_filename)
 
