@@ -28,7 +28,7 @@ def add_helm_ownership_annotations(resource_type, resource_name, namespace, rele
         'meta.helm.sh/release-namespace': namespace
     }
 
-    annotations_str = ",".join([f'{k}={v}' for k, v in helm_annotations.items()])
+    annotations_str = " ".join([f'{k}={v}' for k, v in helm_annotations.items()])
     command = f"kubectl annotate {resource_type} {resource_name} -n {namespace} {annotations_str} --overwrite"
 
     try:
