@@ -33,7 +33,7 @@ def add_helm_ownership_annotations(resource_type, resource_name, namespace, rele
 
     try:
         subprocess.run(command, shell=True, check=True, capture_output=True)
-        print(f"Added Helm ownership annotations to {resource_type}/{resource_name} in namespace {namespace}")
+        print(f" + Added Helm ownership annotations to {resource_type}/{resource_name} in namespace {namespace}")
     except subprocess.CalledProcessError as e:
         print(f"Error updating {resource_type}/{resource_name} annotations: {e.stderr.decode('utf-8').strip()}")
 
@@ -45,10 +45,7 @@ for document in helm_template(chart_path, release_name, namespace):
     name = document['metadata']['name']
 
     if resource_exists(api_version, kind, name, namespace):
-      print(f"{kind}/{name} in namespace {namespace} exists.")
+      print(f"# {kind}/{name} in namespace {namespace} exists.")
       add_helm_ownership_annotations(kind.lower(), name, namespace, release_name)
-    else:
-      pass
-        
-
+       
 
