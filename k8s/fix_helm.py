@@ -1,4 +1,5 @@
 # This is really stupid. :)
+# Adds happy helm annotations to existing resources that should be annotated.
 
 import subprocess
 import yaml
