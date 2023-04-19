@@ -1,5 +1,8 @@
 import os
 import re
+import sys
+
+
 
 def find_tf_files(directory):
     tf_files = []
@@ -25,9 +28,7 @@ def generate_variables_tf(variables, output_file):
             file.write(f'  default     = null\n')
             file.write(f'}}\n\n')
 
-def main():
-    directory = '.'  # Change this to the directory with your Terraform files
-    output_file = 'variables.tf'
+def main(directory, output_file):
     
     tf_files = find_tf_files(directory)
     all_variables = set()
@@ -40,4 +41,6 @@ def main():
     print(f'Successfully generated {output_file} with {len(all_variables)} variables.')
 
 if __name__ == "__main__":
-    main()
+    directory = sys.argv[0]
+    output_file = 'variables.tf'
+    main(directory, output_file)
