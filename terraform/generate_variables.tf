@@ -41,6 +41,6 @@ def main(directory, output_file):
     print(f'Successfully generated {output_file} with {len(all_variables)} variables.')
 
 if __name__ == "__main__":
-    directory = sys.argv[0]
+    directory = sys.argv[1]
     output_file = 'variables.tf'
     main(directory, output_file)
