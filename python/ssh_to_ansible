@@ -1,0 +1,65 @@
+import os
+import re
+import sys
+
+def parse_ssh_config(ssh_config_path):
+    hosts = {}
+    current_host = None
+
+    with open(ssh_config_path, 'r') as file:
+        for line in file:
+            line = line.strip()
+            if re.match(r'(?i)^Host\s+', line):
+                # Capture host alias
+                current_host = line.split()[1]
+                hosts[current_host] = {}
+            elif current_host:
+                # Capture options for the current host
+                match = re.match(r'(\w+)\s+(.*)', line)
+                if match:
+                    key, value = match.groups()
+                    hosts[current_host][key] = value
+    return hosts
+
+def generate_ansible_inventory(hosts):
+    inventory_lines = ['[ssh_hosts]']
+    
+    for host, options in hosts.items():
+        # Use HostName if specified; otherwise, use the alias as the hostname
+        ansible_host = options.get('HostName', host)
+        inventory_line = f"{host} ansible_host={ansible_host}"
+        
+        # Check for additional options like ansible_user or ansible_port
+        ansible_user = options.get('User')
+        if ansible_user:
+            inventory_line += f" ansible_user={ansible_user}"
+
+        ansible_port = options.get('Port')
+        if ansible_port:
+            inventory_line += f" ansible_port={ansible_port}"
+
+        inventory_lines.append(inventory_line)
+    
+    return '\n'.join(inventory_lines)
+
+def main():
+    if len(sys.argv) != 2:
+        return  # Exit if the number of arguments is not correct
+
+    ssh_config_path = sys.argv[1]
+    
+    if not os.path.exists(ssh_config_path):
+        return  # Exit if the specified SSH config file does not exist
+
+    hosts = parse_ssh_config(ssh_config_path)
+    if not hosts:
+        return  # Exit if no hosts were parsed
+
+    ansible_inventory = generate_ansible_inventory(hosts)
+
+    # Print the ansible inventory to stdout
+    print(ansible_inventory)
+
+if __name__ == "__main__":
+    main()
+
