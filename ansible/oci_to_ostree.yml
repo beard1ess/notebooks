@@ -1,0 +1,46 @@
+---
+- name: Export OCI images and commit to OSTree
+  hosts: localhost
+  become: true
+  vars:
+    oci_directory: "/path/to/oci-dir"           # Path to the OCI directory
+    ostree_repo_path: "/var/lib/ostree-repo"    # Path to the OSTree repository
+    tmp_extract_path: "/tmp/oci-extract"        # Temporary path to extract images
+
+  tasks:
+    - name: Install required tools
+      package:
+        name:
+          - podman
+          - ostree
+          - jq
+        state: present
+
+    - name: Ensure OSTree repository exists
+      command: ostree init --repo={{ ostree_repo_path }} --mode=archive
+      args:
+        creates: "{{ ostree_repo_path }}/config"
+
+    - name: Get list of image names from OCI directory
+      command: >-
+        jq -r '.manifests[].annotations."org.opencontainers.image.ref.name"'
+        {{ oci_directory }}/index.json
+      register: oci_images
+
+    - name: Debug list of OCI images
+      debug:
+        var: oci_images.stdout_lines
+
+    - name: Loop through OCI images to export and commit
+      loop: "{{ oci_images.stdout_lines }}"
+      vars:
+        image_name: "{{ item }}"
+        container_name: "export-{{ item | replace('/', '-') }}"
+      block:
+        - name: Extract OCI image to root filesystem
+          command: >-
+            podman load --input={{ oci_directory }}/blobs/sha256/{{ item }}
+
+        - name: Export root filesystem
+          command: >-
+            podman export {{ item }}
